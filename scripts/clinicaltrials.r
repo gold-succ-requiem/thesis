@@ -1,4 +1,3 @@
-# yo angelo!
 library(dplyr)
 library(rclinicaltrials)
 
