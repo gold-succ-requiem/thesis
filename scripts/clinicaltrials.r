@@ -1,16 +1,15 @@
+# Load packages
 library(dplyr)
-library(rclinicaltrials)
+library(rclinicaltrials, lib.loc = "/home/z5232927/packages")
 
 # Sanity check
 # clinicaltrials_count(query = c("phase=2", "phase=3", "type=Intr", "rslt=With"))
 
 # Downloads list of lists of data
-dl <- clinicaltrials_download(query = c("phase=2", "phase=3", "type=Intr", "rslt=With"), count = NULL, include_results = T)
+dl <- clinicaltrials_download(query = c("phase=2", "phase=3", "type=Intr", "rslt=With"), count = 10000, include_results = T)
 
 # Merges arm and intervention dataframes into csv
-dl$study_information %>% 
-    c('arms', 'interventions') %>%
-    merge(.,., by = "nct_id") %>%
+merge(dl$study_information$arms, dl$study_information$interventions, by = "nct_id") %>%
     write.csv(., file = "clinicaltrials.csv")
 
 # To-do list
