@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#PBS -l select=1:ncpus=8:mem=16gb
+#PBS -l walltime=4:00:00
+#PBS -M p.valdez@student.unsw.edu.au
+#PBS -m ae
+#PBS -j oe
+#PBS -o /home/z5232927/scripts/output_report
+
+# Set directory
+cd $HOME
+
+# Load modules
+module load R/4.0.2
+
+# Copy data from my device to local scratch
+rsync -avh "C:\Users\Paolo\Documents\Files\Uni stuff\honours\Thesis\DrugRepo\data\chem_similarity.csv" z5232927@kdm.restech.unsw.edu.au:$TMPDIR
+rsync -avh "C:\Users\Paolo\Documents\Files\Uni stuff\honours\Thesis\DrugRepo\data\protein_similarity.csv" z5232927@kdm.restech.unsw.edu.au:$TMPDIR
+
+# Execute scripts (in scripts directory)
+Rscript ./scripts/snf.r
+
+# Move output from local scratch to my device
+rsync -avh z5232927@kdm.restech.unsw.edu.au:$TMPDIR/fused_similarity.csv "C:\Users\Paolo\Documents\Files\Uni stuff\honours\Thesis\DrugRepo\data"
