@@ -2,11 +2,13 @@
 ## Load packages
 library(data.table)
 library(dplyr)
-library(ff)
-library(kknn)
 library(grDevices)
 library(SNFtool)
-library(Spectrum)
+
+# Array of RepoDB unique drug IDs
+repodb.ids <- fread("../data/repoDB_full.csv") %>%
+    select(drug_id) %>%
+    distinct(., drug_id, .keep_all = T)
 
 # Chemical structure
 ## Load structure sims as matrix
@@ -17,15 +19,12 @@ struct.sim <- fread("../data/chem_similarity.csv") %>%
 rownames(struct.sim) <- struct.sim[,1]
 struct.sim <- struct.sim[,-1]
 
-## Omit rows all containing NA AND cols all containing NA
-struct.sim <- struct.sim[rowSums(is.na(struct.sim)) != ncol(struct.sim), ]
-struct.sim <- struct.sim[ ,colSums(is.na(struct.sim))<nrow(struct.sim)]
+## Subset based on RepoDB
+struct.sim.repodb <- struct.sim[ ,which(colnames(struct.sim) %in% repodb.ids$drug_id)]
+struct.sim.repodb <- subset(struct.sim.repodb, rownames(struct.sim.repodb) %in% repodb.ids$drug_id)
 
-## Subset first 100 rows and cols
-struct.sim.100 <- struct.sim[1:100, 1:100]
-
-## Make elements numeric -- down here to be after NA removal, smaller operation
-struct.sim.100 <- apply(struct.sim.100, 2, as.numeric)
+## Make elements numeric -- so `affinityMatrix()` won't throw a hissy fit
+struct.sim.repodb <- `dimnames<-`(`dim<-`(as.numeric(struct.sim.repodb), dim(struct.sim.repodb)), dimnames(struct.sim.repodb))
 
 # Target structure
 ## Load target similarities as matrix
@@ -35,12 +34,9 @@ seq.sim <- fread("../data/protein_similarity.csv") %>%
 ## Divide matrix by 100 to make everything =< 1
 seq.sim <- seq.sim * (1/100)
 
-## Omit rows all containing NA AND cols all containing NA, not actually needed
-seq.sim <- seq.sim[rowSums(is.na(seq.sim)) != ncol(seq.sim), ]
-seq.sim <- seq.sim[ ,colSums(is.na(seq.sim))<nrow(seq.sim)]
-
-## Subset first 100 rows and cols
-seq.sim.100 <- seq.sim[1:100, 1:100]
+## Subset based on RepoDB
+seq.sim.repodb <- seq.sim[ ,which(colnames(seq.sim) %in% repodb.ids$drug_id)]
+seq.sim.repodb <- subset(seq.sim.repodb, rownames(seq.sim.repodb) %in% repodb.ids$drug_id)
 
 # Pathway similarity
 path.sim <- fread("../data/path_similarity_v2.csv") %>%
@@ -50,15 +46,12 @@ path.sim <- fread("../data/path_similarity_v2.csv") %>%
 rownames(path.sim) <- path.sim[,1]
 path.sim <- path.sim[,-1]
 
-## Omit rows all containing NA AND cols all containing NA, not actually needed
-path.sim <- path.sim[rowSums(is.na(path.sim)) != ncol(path.sim), ]
-path.sim <- path.sim[ ,colSums(is.na(path.sim)) < nrow(path.sim)]
-
-## Subset first 100 rows and cols
-path.sim.100 <- path.sim[1:100, 1:100]
+## Subset based on RepoDB
+path.sim.repodb <- path.sim[ ,which(colnames(path.sim) %in% repodb.ids$drug_id)]
+path.sim.repodb <- subset(path.sim.repodb, rownames(path.sim.repodb) %in% repodb.ids$drug_id)
 
 ## Make elements numeric -- so `affinityMatrix()` won't throw a hissy fit
-path.sim.100 <- apply(path.sim.100, 2, as.numeric)
+#path.sim.100 <- apply(path.sim.100, 2, as.numeric)
 
 # GO BP similarity
 bp.sim <- fread("../data/GO_Sim_BP_combined.csv") %>%
@@ -68,15 +61,12 @@ bp.sim <- fread("../data/GO_Sim_BP_combined.csv") %>%
 rownames(bp.sim) <- bp.sim[,1]
 bp.sim <- bp.sim[,-1]
 
-## Omit rows all containing NA AND cols all containing NA, not actually needed
-bp.sim <- bp.sim[rowSums(is.na(bp.sim)) != ncol(bp.sim), ]
-bp.sim <- bp.sim[ ,colSums(is.na(bp.sim)) < nrow(bp.sim)]
-
-## Subset first 100 rows and cols
-bp.sim.100 <- bp.sim[1:100, 1:100]
+## Subset based on RepoDB
+bp.sim.repodb <- bp.sim[ ,which(colnames(bp.sim) %in% repodb.ids$drug_id)]
+bp.sim.repodb <- subset(bp.sim.repodb, rownames(bp.sim.repodb) %in% repodb.ids$drug_id)
 
 ## Make elements numeric -- so `affinityMatrix()` won't throw a hissy fit
-bp.sim.100 <- apply(bp.sim.100, 2, as.numeric)
+bp.sim.repodb <- `dimnames<-`(`dim<-`(as.numeric(bp.sim.repodb), dim(bp.sim.repodb)), dimnames(bp.sim.repodb))
 
 # GO CC similarity
 cc.sim <- fread("../data/GO_Sim_CC_combined.csv") %>%
@@ -121,12 +111,8 @@ alpha <- 0.5 # hyperparameter
 t <- 20 # t iterations
 
 ## Construct similarity graphs
-W.struct <- affinityMatrix(struct.sim.100, K, alpha)
-W.seq <- affinityMatrix(seq.sim.100, K, alpha)
-W.path <- affinityMatrix(path.sim.100, K, alpha)
-W.bp <- affinityMatrix(bp.sim.100, K, alpha)
-W.cc <- affinityMatrix(cc.sim.100, K, alpha)
-W.mf <- affinityMatrix(mf.sim.100, K, alpha)
+W.struct <- affinityMatrix(struct.sim.repodb, K, alpha)
+W.bp <- affinityMatrix(bp.sim.repodb, K, alpha)
 
 ## Fuse similarity graphs
 W <- list(W.struct, W.seq, W.path, W.bp, W.cc, W.mf) %>%
