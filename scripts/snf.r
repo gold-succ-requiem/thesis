@@ -137,7 +137,7 @@ mf.sim.repodb <- mf.sim.repodb[ ,colSums(is.na(mf.sim.repodb)) < nrow(mf.sim.rep
 
 # COMMON DRUG ID COLLECTION
 ## List of processed similarity matrices
-mats.repodb <- list(struct.sim.repodb, seq.sim.repodb, path.sim.repodb, bp.sim.repodb, cc.sim.repodb, mf.sim.repodb)
+mats.repodb <- list(1- struct.sim.repodb, 1- seq.sim.repodb, 1- path.sim.repodb, 1- bp.sim.repodb, 1 - cc.sim.repodb, 1 - mf.sim.repodb)
 
 ## Collect row names
 common.rows <- Reduce(intersect, lapply(mats.repodb, row.names))
