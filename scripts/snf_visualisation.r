@@ -3,12 +3,13 @@
 library(data.table)
 library(dplyr)
 library(gplots)
+library(qgraph)
 
 # Load SNF to table and normalise
 snf <- fread("../data/new_net_info_V7_pval.csv") %>%
     column_to_rownames(var = "rn") %>%
     as.matrix()
-snf[upper.tri(snf, diag = T)] <- NA
+snf.triang <- snf[upper.tri(snf, diag = T)] <- NA
 #snf <- data.table(
 #    row = rep(seq_len(nrow(snf)), ncol(snf)), 
 #    col = rep(seq_len(ncol(snf)), each = nrow(snf)), 
@@ -43,7 +44,8 @@ snf.melt.adj <- snf.melt %>%
 #    guides(fill = guide_legend(title = "Similarity")) + 
 #    ggsave("../data/struct_aff_heatmap.png")
 
-## Visualisation -- Fused network
+# Visualisation -- Fused network heatmap
+png("../data/snf_heatmap.png")
 heatmap.2(
     snf, 
     dendrogram = "none",
@@ -59,3 +61,9 @@ heatmap.2(
     labRow = NULL,
     labCol = NULL
     )
+dev.off()
+
+# Visualisation -- Fused network graph
+png("../data/snf_graph.png")
+qgraph(snf)
+dev.off()
