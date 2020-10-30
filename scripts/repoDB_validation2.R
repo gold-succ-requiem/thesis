@@ -2,8 +2,10 @@
 library(data.table)
 library(dplyr)
 library(ggplot2)
+library(magrittr)
 library(pbapply)
 library(rje)
+library(rlist)
 library(ROCit)
 library(sets)
 library(tibble)
@@ -11,14 +13,21 @@ library(tidyr)
 
 #lapply(1:15, function(i) {paste("validation", i, "rds", sep = ".")})
 # Set file variables
-predFile <- "W.rds"
-#predDat <- readRDS("W.rds") %>%
-    extract2(5)
-repoDBFile <- "../data/repoDB_full.csv"
+#predFile <- "W.rds"
+predFile <- readRDS("W.rds") #%>%
+    #extract2(5)
+#repoDBFile <- "../data/repoDB_full.csv"
+predDat.single <- readRDS("W.all.combn.rds")
 li <- list()
 
-# validate.fun for validating input
-validate.fun <- function(predFile, labelFile) {
+# Prepare predDat
+#predDat <- lapply(1:4, function(i) {predFile[[i]] <- predDat.single[[i]]})
+predDat <- inset(predDat.single, 5:15, NULL) %>%
+    list.append(., predFile[5:15]) %>%
+    list.flatten()
+
+# Function for validating against RepoDB
+repodb.validate <- function(predDat) {
     # Peforms validation of aggregated matrices against RepoDB.
     
     # Empty list
@@ -36,10 +45,12 @@ validate.fun <- function(predFile, labelFile) {
     #predDat = fread(predDatFile) %>% 
     #  column_to_rownames(var = "rn") %>%
     #  as.matrix()
-    predDat <- readRDS(predFile) %>%
-        extract2(5)
+    #predDat <- readRDS(predFile) %>%
+    #    extract2(5) %>%
+    #    View()
     
     # Convert to table and eliminate duplicates
+    require(reshape2)
     predDat[upper.tri(predDat, diag = T)] = 0
     predDat <- as.data.frame.table(predDat) %>%
         filter(., Freq != 0)
@@ -49,7 +60,7 @@ validate.fun <- function(predFile, labelFile) {
     #fwrite(predDat, file="../data/repoDB_PredDat_V7.csv", sep=",", row.names = F, quote = T)
     
     # Load RepoDB for drug IDs
-    repoDB <- fread(file = labelFile, header = TRUE, sep = ",", quote = "\"")
+    repoDB <- fread(file = "../data/repoDB_full.csv", header = TRUE, sep = ",", quote = "\"")
     
     # Filter predicted Drug-pairs for which drug data available in repoDB
     # I've commented this out as I've already done this
@@ -93,16 +104,16 @@ validate.fun <- function(predFile, labelFile) {
     
     # for full data
     #val.R <- repoDB_validation(predDatFile = "../data/new_net_info_V7_pval.csv",repoDBFile = "../data/repoDB_full.csv", threshold = 0.01)
-    newPred = val.R$pred[-which(is.na(val.R$class))]
-    newClass = val.R$class[-which(is.na(val.R$class))]
+    score = val.R$pred[-which(is.na(val.R$class))]
+    class = val.R$class[-which(is.na(val.R$class))]
     
     # ------------ Simple ROC 
-    ROCit_obj = rocit(score=newPred, class=newClass)
+    ROCit_obj = rocit(score = score, class = class)
     valid[["auc"]] <- ROCit_obj$AUC
     
     # ------------ ROC + confidence interval
-    score = newPred
-    class = newClass
+    #score = newPred
+    #class = newClass
     rocit_emp <- rocit(score = score, class = class, method = "emp")
     rocit_bin <- rocit(score = score, class = class, method = "bin")
     # --------------------------
@@ -110,30 +121,33 @@ validate.fun <- function(predFile, labelFile) {
     set.seed(200)
     ciROC_bin90 <- ciROC(rocit_bin, level = 0.9, nboot = 200)
     
-    #valid[["roc"]] <- plot(ciROC_emp90, col = 1, legend = FALSE)
-    #lines(ciROC_bin90$TPR~ciROC_bin90$FPR, col = 2, lwd = 2)
-    #lines(ciROC_bin90$LowerTPR~ciROC_bin90$FPR, col = 2, lty = 2)
-    #lines(ciROC_bin90$UpperTPR~ciROC_bin90$FPR, col = 2, lty = 2)
-    #legend("bottomright", c("Empirical ROC",
-    #                        "Binormal ROC",
-    #                        "90% CI (Empirical)", 
-    #                        "90% CI (Binormal)"),
-    #       lty = c(1,1,2,2), col = 
-    #           c(1,2,1,2), lwd = c(2,2,1,1))
+    # valid <- list()
+    # valid[["roc"]] <- plot(ciROC_emp90, col = 1, legend = FALSE)
+    # lines(ciROC_bin90$TPR~ciROC_bin90$FPR, col = 2, lwd = 2)
+    # lines(ciROC_bin90$LowerTPR~ciROC_bin90$FPR, col = 2, lty = 2)
+    # lines(ciROC_bin90$UpperTPR~ciROC_bin90$FPR, col = 2, lty = 2)
+    # legend("bottomright", c("Empirical ROC",
+    #                         "Binormal ROC",
+    #                         "90% CI (Empirical)", 
+    #                         "90% CI (Binormal)"),
+    #        lty = c(1,1,2,2), col = 
+    #            c(1,2,1,2), lwd = c(2,2,1,1))
     
     # ----------------- KS plot
     # KS plot shows the cumulative density functions F(c) and G(c) in the positive 
     # and negative populations. If the positive population have higher value, then 
     # negative curve (F(c)) ramps up quickly. The KS statistic is the maximum difference 
     # of F(c) and G(c). (Source: https://cran.r-project.org/web/packages/ROCit/vignettes/my-vignette.html)
-    #kplot <- ksplot(ROCit_obj)
-    #valid[["kstat"]] <- kplot[["KS stat"]]
-    #valid[["kstat.cutoff"]] <- kplot[["KS Cutoff"]]
+    kplot <- ksplot(ROCit_obj)
+    valid[["kstat"]] <- kplot[["KS stat"]] %>%
+        with(., recordPlot())
+    valid[["kstat.cutoff"]] <- kplot[["KS Cutoff"]] %>%
+        with(., recordPlot())
     
     # ---------------- Gain table
     # For description: https://cran.r-project.org/web/packages/ROCit/vignettes/my-vignette.html)
-    rocit_emp <- rocit(score = score, class = class, negref = "FP")
-    gtable_custom <- gainstable(rocit_emp, breaks = seq(1,100,15))
+    #rocit_emp <- rocit(score = score, class = class, negref = "FP")
+    #gtable_custom <- gainstable(rocit_emp, breaks = seq(1,100,15))
     #valid[["gtable"]] <- plot(gtable_custom, type = 1)
     
     # ----------------- Precision-vs-Recall curve
@@ -157,11 +171,13 @@ validate.fun <- function(predFile, labelFile) {
     valid[["measure.names"]] <- names(measure)
     
     # Plot PREC
-    valid[["prec"]] <- plot(measure$PREC~measure$REC, type = "l")
+    valid[["prec"]] <- plot(measure$PREC~measure$REC, type = "l") %>%
+        with(., recordPlot())
     
     # Plot ACC
     valid[["fscr"]] <- measure$FSCR
-    valid[["acc"]] <- plot(measure$ACC~measure$Cutoff, type = "l")
+    valid[["acc"]] <- plot(measure$ACC~measure$Cutoff, type = "l") %>%
+        with(., recordPlot())
     
     # Check to see if entire function works
     valid[["sanity"]] <- c(1:3)
@@ -183,34 +199,35 @@ plot.fun <- function(x) {
 }
 
 # Run function
-li <- validate.fun(predFile, repoDBFile)
+li <- repodb.validate(predDat = predDat[[2]])
 
-#li <- lapply(1:length(predDat), function(i) {
-#    l <- list()
-#    l <- validate.fun(predDat[[i]], repoDBFile)
-#})
+# li <- lapply(1:length(predDat), function(i) {
+#     l <- list()
+#     l <- validate.fun(predDat[[i]], repoDBFile)
+#     return(l)
+# })
 
 # TEST ZONE
 # Define function
-foo.fun <- function(m, n) {
+foo.fun <- function(matrix, scalar) {
     # Takes matrix and scalar inputs, and saves outcomes of matrix operations in a list.
-    # m is matrix
-    # n is scalar
     
     # Empty list
-    l <- list()
+    list <- list()
     
     # Adds 1 to all matrix elements
-    l[["add"]] <- m + 1
+    list[["add"]] <- matrix + 1
     
     # Multiplies matrix elements by n
-    l[["times"]] <- m * n
+    list[["times"]] <- matrix * scalar
     
-    # Transposes matrix
-    l[["trans"]] <- t(m)
+    # Transposes matrix and saves visualisation
+    list[["trans"]] <- t(matrix) %>%
+        heatmap() %>%
+        with(., recordPlot())
     
     # Return output
-    return(l)
+    return(list)
 }
 
 # Define variables
