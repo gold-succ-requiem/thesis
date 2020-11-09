@@ -14,17 +14,18 @@ library(tidyr)
 #lapply(1:15, function(i) {paste("validation", i, "rds", sep = ".")})
 # Set file variables
 #predFile <- "W.rds"
-predFile <- readRDS("W.rds") #%>%
+#predFile <- readRDS("W.1.rds") #%>%
     #extract2(5)
 #repoDBFile <- "../data/repoDB_full.csv"
-predDat.single <- readRDS("W.all.combn.rds")
+#predDat.single <- readRDS("W.combn.1.rds")
+predDat <- readRDS("W.4.rds")
 li <- list()
 
 # Prepare predDat
 #predDat <- lapply(1:4, function(i) {predFile[[i]] <- predDat.single[[i]]})
-predDat <- inset(predDat.single, 5:15, NULL) %>%
-    list.append(., predFile[5:15]) %>%
-    list.flatten() #%>%
+# predDat <- inset(predDat.single, 5:15, NULL) %>%
+#     list.append(., predFile[5:15]) %>%
+#     list.flatten() #%>%
     #View()
 
 # Function for validating against RepoDB
@@ -201,19 +202,18 @@ repodb.validate <- function(predDat) {
 }
 
 # Run function
-#li <- repodb.validate(predDat = predDat[[1]])
-
-li <- lapply(1:length(predDat), function(i) {
+li <- lapply(c(1:2, 4:length(predDat)), function(i) {
     l <- list()
     l <- repodb.validate(predDat[[i]]) %>%
         list.append()
     return(l)
 })
-saveRDS(li, "li.rds")
+saveRDS(li, "li.4.rds")
 
-# Produce AUC
-# 1:15 %>% 
-#     lapply(., function(i) {
-#         l <- readRDS("li.rds")
-#         return(l[[i]][["auc"]])
-#     })
+# Experiments
+# li.x.rds
+
+# v <- c(1:5)
+# v %>%
+#     magrittr::extract(c(1:2, 4:5)) %>%
+#     View()
