@@ -1,3 +1,7 @@
+---
+title: In silico network-based drug repositioning through similarity fusion and adverse drug event penalisation
+---
+
 # Drug Repositioning with Side Effects
 
 **Note: work in progress**
@@ -42,9 +46,8 @@ x|Quantile
 1|0th
 3|50th
 4|75th
-|
 
-Thus, `x` maps to quantile at which fused matrices were filtered.
+Thus, `x` maps to quantile at which fused matrices were filtered. e.g. `W.3.rds` will contain a list of fusion matrices where similarities less than the median have been converted to 0.
 
 ### Reprioritisation based on side effects
 
