@@ -21,7 +21,7 @@ Similarity matrices for drug and disease data, plus corresponding drug IDs in th
 - `repoDB_full.csv`: corresponding drug IDs in RepoDB dataset
 
 #### Processing
-- `snf2.r`
+- `snf2.r`: performs similarity network fusion on similarity matrices, along with required preprocessing
 
 Performs the following functions:
 
@@ -31,8 +31,7 @@ Performs the following functions:
 - **Fusion matrix filtering.** To improve predictive ability, filters fused matrices at particular percentile thresholds. As this feature uses the base R `stats::quantile()` function, so filtering is limited to specific quartiles -- see this Output section for details.
 
 #### Output
-- `W.combn.x.rds`
-- `W.x.rds`
+- `W.x.rds`: list of fusion matrices
 
 The following table maps quantile settings to percentiles for filtering; quantile setting `x` is also used to label output files filtered correspondingly:
 
@@ -46,6 +45,20 @@ x|Quantile
 
 Thus, `x` maps to quantile at which fused matrices were filtered. e.g. `W.3.rds` will contain a list of fusion matrices where similarities less than the median have been converted to 0.
 
-### Reprioritisation based on side effects
+### SNF validation
+#### Input
+- `W.x.rds`: list of fusion matrices
 
-# References
+#### Process
+- `repoDB_validation2.r`: compares fusion matrix results to repoDB dataset
+
+#### Output
+- `li.x.rds`: fusion performance statistics
+
+### Reprioritisation based on side effects
+#### Input
+
+#### Process
+- `sider2.r`
+
+#### Output
