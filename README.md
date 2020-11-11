@@ -1,12 +1,51 @@
 # Drug Repositioning with Side Effects
 
-## Description
-
 **Note: work in progress**
 
-### Background
-A drug repositioning system that incorporates a diversity of chemical, pharmacological, and biological data. A key aspect of the project is to incorporate side effect and toxicity data; it is intended that dissimilarities in side effect and toxicity between drugs, rather than similarities, will be used to recommend similar drugs.
+## Background
+A network-based drug repositioning system that incorporates drug structure, drug-induced pathway, target sequence, and target function similarity data. A key aspect of the project is to incorporate side effect and toxicity data. Rather than recommending repositioning candidates based on the similarity of their side effects, it penalises candidates with more severe side effects. Side effect frequency is used as a proxy for severity. It is assumed side effects with higher frequencies are less severe than those with lower frequencies.
 
-### Features
-- data collection and processing
-- feature selection and dimensionality reduction
+## Features
+
+### At a glance
+- similarity aggregation via similarity network fusion
+- clustering analysis via spectral clustering
+- reprioritisation of recommended drugs based on side effects
+
+### Aggregation by similarity network fusion
+#### Input
+Similarity matrices for drug and disease data, plus corresponding drug IDs in the RepoDB dataset.
+
+- `chem_similarity.csv`: drug structure similarity
+- `target_similarity.csv`: drug target tertiary sequence similarity
+- `path_similarity_v2.csv`: drug-induced pathway similarity
+- `GO_Sim_BP_combined.csv`: drug target GO term (biological process) similarity
+- `repoDB_full.csv`: corresponding drug IDs in RepoDB dataset
+
+#### Processing
+- `snf2.r`
+
+Performs the following functions:
+
+- **Similarity matrix preprocessing.** Sets matrix rownames; resizes matrix dimensions to intersection of drug IDs in matrix and RepoDB; filters rows and columns containing entirely NA values.
+- **Similarity network fusion.** Based on Wang et al. (2014).
+- **Fusion matrix filtering.** 
+
+#### Output
+- `W.combn.x.rds`
+- `W.x.rds`
+
+Refer to the following table for x values:
+
+x|Quantile
+-|-
+1|0th
+3|50th
+4|75th
+|
+
+Thus, `x` maps to quantile at which fused matrices were filtered.
+
+### Reprioritisation based on side effects
+
+# References
