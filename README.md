@@ -1,8 +1,4 @@
----
-title: In silico network-based drug repositioning through similarity fusion and adverse drug event penalisation
----
-
-# Drug Repositioning with Side Effects
+# In silico network-based drug repositioning through similarity fusion and adverse drug event penalisation
 
 **Note: work in progress**
 
