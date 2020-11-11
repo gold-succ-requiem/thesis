@@ -26,26 +26,23 @@ Similarity matrices for drug and disease data, plus corresponding drug IDs in th
 Performs the following functions:
 
 - **Similarity matrix preprocessing.** Sets matrix rownames; resizes matrix dimensions to intersection of drug IDs in matrix and RepoDB; filters rows and columns containing entirely NA values.
-- **Combination.** Generates list of combinations of matrices (e.g. structure only; structure and target; structure, pathway, and BP; all four). Gives
-
-![2^n  - 1](http://www.sciweavers.org/tex2img.php?eq=2%5En%20%20-%201&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0.png)
-
-combinations of matrices. In our case, n = 4.
-
-- **Similarity network fusion.** Based on [Wang et al. (2014)](https://pubmed.ncbi.nlm.nih.gov/24464287/). d
-- **Fusion matrix filtering.** 
+- **Combination.** Generates list of combinations of matrices (e.g. structure only; structure and target; structure, pathway, and BP; all four). Gives ![2^n  - 1](http://www.sciweavers.org/tex2img.php?eq=2%5En%20%20-%201&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0.png) combinations of matrices. In our case, n = 4, which gave a feasible 15 matrices per list.
+- **Similarity network fusion.** Based on the implementation in [Wang et al. (2014)](https://pubmed.ncbi.nlm.nih.gov/24464287/). SNF considers each similarity matrix as a network of drug nodes, with edges representing the similarities between any two drugs; and combines the similarities into one fused network. For each combination of matrices in a list, its fused network was computed.
+- **Fusion matrix filtering.** To improve predictive ability, filters fused matrices at particular percentile thresholds. As this feature uses the base R `stats::quantile()` function, so filtering is limited to specific quartiles -- see this Output section for details.
 
 #### Output
 - `W.combn.x.rds`
 - `W.x.rds`
 
-Refer to the following table for x values:
+The following table maps quantile settings to percentiles for filtering; quantile setting `x` is also used to label output files filtered correspondingly:
 
 x|Quantile
 -|-
 1|0th
+2|25th
 3|50th
 4|75th
+5|100th
 
 Thus, `x` maps to quantile at which fused matrices were filtered. e.g. `W.3.rds` will contain a list of fusion matrices where similarities less than the median have been converted to 0.
 
