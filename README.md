@@ -28,7 +28,7 @@ Performs the following functions:
 - **Similarity matrix preprocessing.** Sets matrix rownames; resizes matrix dimensions to intersection of drug IDs in matrix and RepoDB; filters rows and columns containing entirely NA values.
 - **Combination.** Generates list of combinations of matrices (e.g. structure only; structure and target; structure, pathway, and BP; all four). Gives
 
-![2^n  - 1](https://latex2png.com/pngs/948174b581968f4becdbbd181406491a.png)
+![2^n  - 1](http://www.sciweavers.org/tex2img.php?eq=2%5En%20%20-%201&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0.png)
 
 combinations of matrices. In our case, n = 4.
 
