@@ -80,39 +80,25 @@ filter.quart <- function(sim.mat, quart) {
     return(sim.mat)
 }
 
-# SNF function over list of matrices
-# ifelse.SNF <- function(i) {
-#     ifelse(length(W.all.combn[[i]]) == 1, W.all.combn[[i]],SNF(W.all.combn[[i]], K, t))
-# }
-
 # Build list of preprocessed CSV files
-# Convert to dist mat
-W.all <- lapply(files, preprocess) #%>%
-    #lapply(., `*`, -1) %>%
-    #lapply(., `+`, 1)
+W.all <- lapply(files, preprocess)
 
 # Collect row names
 common.rows <- Reduce(intersect, lapply(W.all, row.names))
 
 # Subset dist mats by common drug IDs
-# Convert to affinity matrix
 W.all.repodb <- lapply(W.all, function(x) { x[row.names(x) %in% common.rows,] }) %>%
     lapply(., function(x) {x[ ,which(colnames(x) %in% common.rows)]})
 
 # List of all
-W.all.combn <- do.call(c, lapply(1:length(W.all.repodb), function(x) {combn(W.all.repodb, x, simplify = F)})) %T>%
-    saveRDS(., "W.combn.4.rds")
+W.all.combn <- do.call(c, lapply(1:length(W.all.repodb), function(x) {combn(W.all.repodb, x, simplify = F)}))
 
-# Fuse affinity matrices
+# Fuse affinity matrices, filter by quartile threshold
 W <- lapply(1:length(W.all.combn), function(i) {SNF(W.all.combn[[i]], K, t)}) %>%
     inset(., 1:4, W.all.combn[1:4]) %>%
     list.flatten() %>%
-    rapply(., filter.quart, classes = "ANY", how = "list", quart = 4) %T>%
-    saveRDS(., "W.4.rds")
-
-# Output -- scaled
-# saveRDS(W, "W.rds")
-# saveRDS(W.all.combn, "W.all.combn.rds")
+    rapply(., filter.quart, classes = "ANY", how = "list", quart = 1) %T>%
+    saveRDS(., "W.1.rds")
 
 # Output -- experiment
 # "W.combn.x.rds" <- list of all

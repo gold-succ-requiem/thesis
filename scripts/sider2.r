@@ -3,6 +3,7 @@
 library(data.table)
 library(dplyr)
 library(magrittr)
+library(matrixStats)
 library(readr)
 library(tibble)
 library(tidyr)

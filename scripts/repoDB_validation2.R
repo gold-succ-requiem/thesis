@@ -11,22 +11,9 @@ library(sets)
 library(tibble)
 library(tidyr)
 
-#lapply(1:15, function(i) {paste("validation", i, "rds", sep = ".")})
 # Set file variables
-#predFile <- "W.rds"
-#predFile <- readRDS("W.1.rds") #%>%
-    #extract2(5)
-#repoDBFile <- "../data/repoDB_full.csv"
-#predDat.single <- readRDS("W.combn.1.rds")
-predDat <- readRDS("W.4.rds")
+predDat <- readRDS("W.1.rds")
 li <- list()
-
-# Prepare predDat
-#predDat <- lapply(1:4, function(i) {predFile[[i]] <- predDat.single[[i]]})
-# predDat <- inset(predDat.single, 5:15, NULL) %>%
-#     list.append(., predFile[5:15]) %>%
-#     list.flatten() #%>%
-    #View()
 
 # Function for validating against RepoDB
 repodb.validate <- function(predDat) {
@@ -37,7 +24,9 @@ repodb.validate <- function(predDat) {
     
     # Variables
     threshold <- 0.01
-    #predDat <- predDat[[1]]
+    
+    # Test variables -- comment out when sourcing
+    predDat <- predDat[[1]]
     
     # Load prediction data files
     #predDat = as.data.frame(fread(file = predDatFile, header = TRUE, sep = ",", quote = "\""))
@@ -102,7 +91,6 @@ repodb.validate <- function(predDat) {
     # val.R <- repoDB_validation(predDatFile = "../data/",repoDBFile = "../data/repoDB_full.csv", threshold = 0.01)
     # ROCit_obj = rocit(score=val.R$pred, class=val.R$class)
     # plot(ROCit_obj)
-    
     
     # for full data
     #val.R <- repoDB_validation(predDatFile = "../data/new_net_info_V7_pval.csv",repoDBFile = "../data/repoDB_full.csv", threshold = 0.01)
@@ -212,8 +200,3 @@ saveRDS(li, "li.4.rds")
 
 # Experiments
 # li.x.rds
-
-# v <- c(1:5)
-# v %>%
-#     magrittr::extract(c(1:2, 4:5)) %>%
-#     View()
